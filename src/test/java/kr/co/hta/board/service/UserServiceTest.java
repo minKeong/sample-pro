@@ -30,6 +30,11 @@ public class UserServiceTest {
 		assertThat(userService, notNullValue());
 	}
 	
+	@Test()
+	public void testDetailUser() {
+		
+	}
+	
 	@Test
 	public void testAddNewUser() {
 		User user = new User();
