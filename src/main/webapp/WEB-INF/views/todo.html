@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <title>todo</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+	<div class="container">
+		<h1>
+			Todo
+			<button class="btn btn-info pull-right" id="btn-show-form">새 일정</button>
+		</h1>
+
+		<table class="table" id="todo-table">
+			<thead>
+				<tr>
+					<th>번호</th>
+					<th>제목</th>
+					<th>날짜</th>
+					<th>완료여부</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+
+		<!-- Trigger the modal with a button -->
+		<!-- <button type="button" class="btn btn-info btn-lg" data-toggle="modal"
+			data-target="#myModal">Open Modal</button> -->
+
+		<!-- Modal -->
+		<div id="todo-modal" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Todo form</h4>
+					</div>
+					<div class="modal-body">
+						<form class="well" id="todo-form">
+							<div class="form-group todo-detail">
+								<label>번호</label>
+								<input type="text" class="form-control" name="no" readonly />
+							</div>
+							<div class="form-group todo-detail">
+								<label>완료 여부</label>
+								<input type="text" class="form-control" name="completed" />
+							</div>
+							<div class="form-group">
+								<label>구분</label>
+								<select class="form-control" name="type">
+									<option value="home"> 집</option>
+									<option value="job"> 직장</option>
+									<option value="private"> 개인</option>
+									<option value="etc"> 기타</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label>제목</label>
+								<input type="text" class="form-control" name="title" />
+							</div>
+							<div class="form-group">
+								<label>날짜</label>
+								<input type="date" class="form-control" name="day" />
+							</div>
+							<div class="form-group">
+								<label>내용</label>
+								<textarea rows="3" class="form-control" name="description"></textarea>
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-orimary" id="btn-add-todo">등록</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+$(function() {
+	
+	function getRow(todo) {
+		var row = "<tr id='todo-"+todo.no+"'>";
+		row += "<td>"+todo.no+"</td>";
+		row += "<td><a href='"+todo.no+"'>"+todo.title+"</a></td>";
+		row += "<td>"+todo.day+"</td>";
+		row += "<td>"+todo.completed+"</td>";
+		row += "<td><button class='btn btn-danger btn-xs' id='del-btn-"+todo.no+"'>삭제</button></td>";
+		row += "</tr>";
+		
+		return row;
+	}
+	
+	$.ajax({
+		type: 'GET',
+		url: '/todo/',
+		dataType: 'json',
+		success: function(todos) {
+			var $tbody = $('#todo-table tbody');
+			$.each(todos, function(index, todo) {
+				$tbody.append(getRow(todo));
+			});
+		}
+	});
+	
+	$('#todo-table').on('click', '[id^=del-btn]', function() {
+		var no = $(this).attr('id').replace('del-btn-', '');
+		
+		$.ajax({
+			type: 'DELETE',
+			url: '/todo/'+no,
+			dataType: 'json',
+			success: function(todo) {
+				if (todo.no) {
+					$('#todo-'+no).remove();
+				}
+			}
+		});
+	})
+	
+	$('#btn-show-form').click(function() {
+		$('#todo-modal .todo-detail').hide();
+		$('#todo-modal').modal('show');
+	});
+	
+	$('#btn-add-todo').click(function() {
+		
+		var todo = {};
+		todo["type"] = $("[name=type]").val();
+		todo["title"] = $("[name=title]").val();
+		todo["day"] = $("[name=day]").val();
+ 		todo["description"] = $("[name=description]").val();
+ 		
+ 		$.ajax({
+ 			type: 'POST',
+ 			url: '/todo/',
+ 			data: JSON.stringify(todo),
+ 			contentType: 'application/json',	// 서버로 보내는 컨텐츠의 타입
+ 			dataType: 'json',					// 서버로부터 받는 컨텐츠의 타입
+ 			success: function() {
+ 				$('#todo-table tbody').prepend(getRow(todo));
+ 			},
+ 			complete: function() {			// 코드 성공과관계없이 실행됨
+ 				$('#todo-modal').modal('hide');
+ 			}
+ 		});
+	});
+	
+	$('#todo-table tbody').on('click', 'a', function() {
+		
+		var no = $(this).attr('href');
+		
+		$.ajax({
+			type: 'GET',
+			url :'/todo/'+no,
+			dataType: 'json'
+		})
+		.done(function(todo) {
+			// success
+			$('[name=no]').val(todo.no);
+			$('[name=completed]').val(todo.completed);
+			$('[name=type]').val(todo.type);
+			$('[name=title]').val(todo.title);
+			$('[name=day]').val(todo.day);
+			$('[name=description]').val(todo.description);
+			
+			$('#todo-modal').find('.todo-detail').show().end().modal('show');
+		})
+		.fail(function() {
+			// error
+		})
+		.always(function() {
+			// complete
+		});
+		
+		return false;
+	});
+	
+	$('#todo-modal').on('hide.bs.modal', function() {
+		$("[name=type]").val('home');
+		$("[name=title]").val('');
+		$("[name=day]").val('');
+		$("[name=description]").val('');
+	});
+	
+});
+</script>
+</html>

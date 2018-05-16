@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+	<!-- 사용자정의 매개변수 해석기를 넣어놓은 것 -->
+	<mvc:annotation-driven>
+		<mvc:argument-resolvers>
+			<bean class="kr.co.hta.board.web.resolvers.LoginUserHandlerMethodArgmentResolver"></bean>
+		</mvc:argument-resolvers>
+	</mvc:annotation-driven>
+	<!-- <context:component-scan base-package="kr.co.hta.board.service.web" /> -->
+	<context:component-scan base-package="kr.co.hta.board.web" />
+	
+	<!-- 
+		/** : 모든 url 요청
+		모든 url요청에 대해서 LoginCheckInterceptor가 실행되게 한다
+		LoginCheckInterceptor에 값을 4개 전해주고 그 4개의 url일 경우엔 로그인 하지 않아도 실행되게 한다
+	-->
+	<!-- <mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="kr.co.hta.board.web.interceptors.LoginCheckInterceptor">
+				<property name="urls">
+					<set>
+						<value>/home.do</value>
+						<value>/user/form.do</value>
+						<value>/user/register.do</value>
+						<value>/user/login.do</value>
+						<value>/user/logout.do</value>
+					</set>
+				</property>
+			</bean>
+		</mvc:interceptor>
+	</mvc:interceptors> -->
+	
+	<!-- 
+		디폴트 서블릿 핸들러를 빈으로 등록하기
+		디폴트 서블릿 핸들러는 .jsp, .html과 같은 확장자로 끝나는 
+		요청을 처리하는 서블릿 핸들러다
+		
+		dispatherServlet말고 또 다른 서블릿이 등록된다
+		default-servlet이 우선순위가 더 높기 때문에 먼저 실행된다
+		따라서 .jsp나 .html과 같은 확장자로 요청이 오면 
+		해당 페이지로 이동시키고 dispatherServlet는 실행되지 않게 한다(무한루프를 탈출!)
+	-->
+	<mvc:default-servlet-handler/>
+	
+	
+	<bean class="kr.co.hta.board.web.views.DownloadView" />
+	
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8" />
+		<property name="maxUploadSize" value="10485760" />
+	</bean>
+	
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/views/" />
+	</bean>
+	
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basename" value="classpath:/META-INF/i18n/messages" />
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+
+</beans>
