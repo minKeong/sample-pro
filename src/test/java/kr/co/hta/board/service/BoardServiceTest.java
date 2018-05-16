@@ -41,6 +41,12 @@ public class BoardServiceTest {
 		assertThat(board, notNullValue());
 	}
 	
+	// 딴거 넣기
+	@Test
+	public void aa() {
+		
+	}
+	
 }
 
 
